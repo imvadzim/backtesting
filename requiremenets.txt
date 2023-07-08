@@ -1,0 +1,5 @@
+yfinance==0.2.22
+vectorbt==0.25.4
+jupytext==1.14.7
+PyPortfolioOpt==1.5.5
+kaleido==0.2.1

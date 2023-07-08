@@ -86,3 +86,6 @@ their is a positive amount on the average value of stocks after the second time 
 bought and the bot got the sell signal as normal its fine.
 Example you have 10 stocks you bought at 100. You then buy additional 20 stocks at
 50. your average of stocks is = 66.
+
+Initialisation:
+jupytext --update-metadata '{"jupytext": {"cell_markers": "\"\"\""}}' main.py --to py:percent
