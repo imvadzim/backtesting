@@ -1,3 +1,16 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_markers: '"""'
+#     cell_metadata_filter: -all
+#     text_representation:
+#       extension: .py
+#       format_name: percent
+#       format_version: '1.3'
+#       jupytext_version: 1.14.7
+# ---
+
+# %%
 from datetime import datetime
 import pytz
 import vectorbt as vbt
@@ -12,35 +25,45 @@ from pypfopt import risk_models
 from pypfopt.efficient_frontier import EfficientFrontier
 from pypfopt import base_optimizer
 
+# %%
 # Define params
 symbols = ['AMZN', 'NFLX', 'GOOG', 'AAPL']
 start_date = datetime(2017, 1, 1, tzinfo=pytz.utc)
 end_date = datetime(2020, 1, 1, tzinfo=pytz.utc)
 num_tests = 2000
 
+# %%
 vbt.settings.array_wrapper['freq'] = 'days'
 vbt.settings.returns['year_freq'] = '252 days'
 vbt.settings.portfolio['seed'] = 42
 vbt.settings.portfolio.stats['incl_unrealized'] = True
 
+# %%
 yfdata = vbt.YFData.download(symbols, start=start_date, end=end_date)
 print(yfdata.symbols)
 
+# %%
 ohlcv = yfdata.concat()
 print(ohlcv.keys())
 
+# %%
 price = ohlcv['Close']
 
+# %%
 # Plot normalized price series
 (price / price.iloc[0]).vbt.plot().show_png()
 
+# %%
 returns = price.pct_change()
 print(returns.mean())
 
+# %%
 print(returns.std())
 
+# %%
 print(returns.corr())
 
+# %%
 # vectorbt: random search
 # One-time allocation
 np.random.seed(42)
@@ -52,16 +75,19 @@ for i in range(num_tests):
     weights.append(w)
 print(len(weights))
 
+# %%
 # Build column hierarchy such that one weight corresponds to one price series
 _price = price.vbt.tile(num_tests, keys=pd.Index(np.arange(num_tests), name='symbol_group'))
 _price = _price.vbt.stack_index(pd.Index(np.concatenate(weights), name='weights'))
 print(_price.columns)
 
+# %%
 # Define order size
 size = np.full_like(_price, np.nan)
 size[0, :] = np.concatenate(weights)  # allocate at first timestamp, do nothing afterward
 print(size.shape)
 
+# %%
 # Run simulation
 pf = vbt.Portfolio.from_orders(
     close=_price,
@@ -72,6 +98,7 @@ pf = vbt.Portfolio.from_orders(
 )  # all weights sum to 1, no shorting, and 100% investment in risky assets
 print(len(pf.orders))
 
+# %%
 # Plot annualized return against volatility, color by sharpe ratio
 annualized_return = pf.annualized_return()
 annualized_return.index = pf.annualized_volatility()
@@ -91,25 +118,31 @@ annualized_return.vbt.scatterplot(
     yaxis_title='annualized_return'
 ).show_png()
 
+# %%
 # Get index of the best group according to the target metric
 best_symbol_group = pf.sharpe_ratio().idxmax()
 print(best_symbol_group)
 
+# %%
 # Print best weights
 print(weights[best_symbol_group])
 
+# %%
 # Compute default stats
 print(pf.iloc[best_symbol_group].stats())
 
+# %%
 # Re-balance monthly
 # Select the first index of each month
 rb_mask = ~_price.index.to_period('m').duplicated()
 print(rb_mask.sum())
 
+# %%
 rb_size = np.full_like(_price, np.nan)
 rb_size[rb_mask, :] = np.concatenate(weights)  # allocate at mask
 print(rb_size.shape)
 
+# %%
 # Run simulation, with re-balancing monthly
 rb_pf = vbt.Portfolio.from_orders(
     close=_price,
@@ -121,14 +154,18 @@ rb_pf = vbt.Portfolio.from_orders(
 )
 print(len(rb_pf.orders))
 
+# %%
 rb_best_symbol_group = rb_pf.sharpe_ratio().idxmax()
 print(rb_best_symbol_group)
 
+# %%
 print(weights[rb_best_symbol_group])
 
+# %%
 print(rb_pf.iloc[rb_best_symbol_group].stats())
 
 
+# %%
 def plot_allocation(rb_pf):
     # Plot weights development of the portfolio
     rb_asset_value = rb_pf.asset_value(group_by=False)
@@ -156,9 +193,11 @@ def plot_allocation(rb_pf):
     fig.show_png()
 
 
+# %%
 plot_allocation(rb_pf.iloc[rb_best_symbol_group])  # best group
 
 
+# %%
 # # Search and re-balance every 30 days
 """
 Utilize low-level API to dynamically search for best Sharpe ratio and re-balance accordingly. 
@@ -166,10 +205,13 @@ Compared to previous method, we won't utilize stacking, but do search in a loop 
 We also will use days instead of months, as latter may contain a various number of trading days.
 """
 
+# %%
 srb_sharpe = np.full(price.shape[0], np.nan)
 
+# %%
 ann_factor = returns.vbt.returns.ann_factor
 
+# %%
 @njit
 def pre_sim_func_nb(c, every_nth):
     # Define re-balancing days
@@ -177,6 +219,7 @@ def pre_sim_func_nb(c, every_nth):
     c.segment_mask[every_nth::every_nth, :] = True
     return ()
 
+# %%
 @njit
 def find_weights_nb(c, price, num_tests):
     # Find optimal weights based on best Sharpe ratio
@@ -202,6 +245,7 @@ def find_weights_nb(c, price, num_tests):
 
     return best_sharpe_ratio, weights
 
+# %%
 @njit
 def pre_segment_func_nb(c, find_weights_nb, history_len, num_tests, srb_sharpe):
     if history_len == -1:
@@ -228,6 +272,7 @@ def pre_segment_func_nb(c, find_weights_nb, history_len, num_tests, srb_sharpe):
 
     return (weights,)
 
+# %%
 @njit
 def order_func_nb(c, weights):
     col_i = c.call_seq_now[c.call_idx]
@@ -237,6 +282,7 @@ def order_func_nb(c, weights):
         size_type=SizeType.TargetPercent
     )
 
+# %%
 # Run simulation using a custom order function
 srb_pf = vbt.Portfolio.from_order_func(
     price,
@@ -249,17 +295,22 @@ srb_pf = vbt.Portfolio.from_order_func(
     group_by=True
 )
 
+# %%
 # Plot the best Sharpe ratio at each re-balancing day
 pd.Series(srb_sharpe, index=price.index).vbt.scatterplot(trace_kwargs=dict(mode='markers')).show_png()
 
+# %%
 print(srb_pf.stats())
 
+# %%
 plot_allocation(srb_pf)
 
+# %%
 # You can see how weights stabilize themselves with growing data.
 # Run simulation, but now consider only the last 252 days of data
 srb252_sharpe = np.full(price.shape[0], np.nan)
 
+# %%
 srb252_pf = vbt.Portfolio.from_order_func(
     price,
     order_func_nb,
@@ -272,10 +323,13 @@ srb252_pf = vbt.Portfolio.from_order_func(
 )
 pd.Series(srb252_sharpe, index=price.index).vbt.scatterplot(trace_kwargs=dict(mode='markers')).show_png()
 
+# %%
 print(srb252_pf.stats())
 
+# %%
 plot_allocation(srb252_pf)
 
+# %%
 # A much more volatile weight distribution.
 # PyPortfolioOpt + vectorbt
 # One-time allocation
@@ -289,10 +343,12 @@ clean_weights = ef.clean_weights()
 pyopt_weights = np.array([clean_weights[symbol] for symbol in symbols])
 print(pyopt_weights)
 
+# %%
 pyopt_size = np.full_like(price, np.nan)
 pyopt_size[0, :] = pyopt_weights  # allocate at first timestamp, do nothing afterward
 print(pyopt_size.shape)
 
+# %%
 # Run simulation with weights from PyPortfolioOpt
 pyopt_pf = vbt.Portfolio.from_orders(
     close=price,
@@ -303,8 +359,10 @@ pyopt_pf = vbt.Portfolio.from_orders(
 )
 print(len(pyopt_pf.orders))
 
+# %%
 print(pyopt_pf.stats())
 
+# %%
 # # Search and re-balance monthly
 """
 You can’t use third-party optimization packages within Numba (yet).
@@ -314,6 +372,7 @@ Disable Numba for the function, but also for every other function in the stack t
 We will demonstrate the second option.
 """
 
+# %%
 def pyopt_find_weights(sc, price, num_tests):  # no @njit decorator = it's a pure Python function
     # Calculate expected returns and sample covariance matrix
     price = pd.DataFrame(price, columns=symbols)
@@ -330,8 +389,10 @@ def pyopt_find_weights(sc, price, num_tests):  # no @njit decorator = it's a pur
     return best_sharpe_ratio, weights
 
 
+# %%
 pyopt_srb_sharpe = np.full(price.shape[0], np.nan)
 
+# %%
 # Run simulation with a custom order function
 pyopt_srb_pf = vbt.Portfolio.from_order_func(
     price,
@@ -345,9 +406,12 @@ pyopt_srb_pf = vbt.Portfolio.from_order_func(
     use_numba=False  # run simulate_nb as pure Python function
 )
 
+# %%
 pd.Series(pyopt_srb_sharpe, index=price.index).vbt.scatterplot(trace_kwargs=dict(mode='markers')).show_png()
 
+# %%
 print(pyopt_srb_pf.stats())
 
 
+# %%
 plot_allocation(pyopt_srb_pf)
