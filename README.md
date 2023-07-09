@@ -1,14 +1,11 @@
 # Backtesting for rodinicc
 
-Golden dragon (long term and mid term)
-
-The script and code for this strategy is done for the most part, their is still some minor
-tweaks that need to be done.
-
-Backtesting script
-We need a backtesting script for the exact strategy.
-It needs to be able to backtest: 1h, 4h, 1D and 1W.
-It needs to backtest through Yahoo finance.
+Todo (requirements):
+1. Backtesting script (.py)
+2. Golden dragon (long term and mid term)
+3. Backtest: 1h, 4h, 1D and 1W.
+4. Backtest through Yahoo finance.
+5. Backtest more than 1 stock at once
 Its okay to have the backtest plotting different graphs so it's easier to see and analyze
 and not gather all the information on one plot graph.
 The backtesting plot graph needs to include:
@@ -18,7 +15,6 @@ The backtesting plot graph needs to include:
 - Dates.
 - Buy/sell dots on where it bought and sold on the stock graph.
 
-- It needs to be able to backtest more than 1 stock at once.
 
 - IF there is a period where the value (money) went to 0 the backtest still needs to
   keep running after that period even if the bot cant buy any more stocks.
