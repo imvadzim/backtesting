@@ -33,18 +33,40 @@
 # todo: 9. (Additional, to be added to the strategy) It needs to be able to buy on 1h - 1w graphs.
 # todo: 10. (Additional) STOP LOSS /sell signal (False/true). If the stop loss is set to false, then the bot needs to hold the stock instead of selling it, it then needs to use its "martingale" method to buy at the next buy signal instead. You then average down on your value of the total stocks, But it cant take profit on negative if the average down still is negative even if the bot wants to take profit. If their is a positive amount on the average value of stocks after the second time it bought and the bot got the sell signal as normal its fine. Example you have 10 stocks you bought at 100. You then buy additional 20 stocks at 50. Your average of stocks is = 66.
 # todo: try fresh install on a new env
+# %% [markdown]
+"""
+# Data pulling
+"""
+
 # %%
+# Import necessary libraries
 import vectorbt as vbt
 
-price = vbt.YFData.download('BTC-USD', start='2018-01-01').get('Close')
+# tickers = ['AMZN', 'NFLX', 'GOOG', 'AAPL']
+tickers = ['BTC-USD']
+price = vbt.YFData.download(tickers, start='2018-01-01').get('Close')
+price.tail(5)
+# %%
+price.describe()
+
+# %% [markdown]
+"""
+# Strategy
+"""
+
+# %%
+# Let's define strategy's parameters
 fast_ma = vbt.MA.run(price, 50, short_name='fast_ma')
 slow_ma = vbt.MA.run(price, 200, short_name='slow_ma')
 entries = fast_ma.ma_crossed_above(slow_ma)
 exits = fast_ma.ma_crossed_below(slow_ma)
 pf = vbt.Portfolio.from_signals(price, entries, exits, fees=0.005)
+
 # %%
+# Information about orders
 pf.orders.records_readable
 # %%
+# Plot the strategy
 fig = price.vbt.plot(trace_kwargs=dict(name='Close'))
 fast_ma.ma.vbt.plot(trace_kwargs=dict(name='Fast MA'), fig=fig)
 slow_ma.ma.vbt.plot(trace_kwargs=dict(name='Slow MA'), fig=fig)
@@ -52,17 +74,18 @@ pf.positions.plot(close_trace_kwargs=dict(visible=False), fig=fig)
 fig.show()
 
 # %%
-pf.benchmark_returns()
-
-# %%
 # Print some useful benchmark metrics
-print(f'Total benchmark return: {round(pf.total_benchmark_return(), 2)}')
+# todo: organize all metrics below
+print(f'Final value: {round(pf.final_value(), 2)}')
 print(f'Total profit: {round(pf.total_profit(), 2)}')
 print(f'Total return: {round(pf.total_return(), 2)}')
-print(f'Final value: {round(pf.final_value(), 2)}')
+print(f'Total benchmark return: {round(pf.total_benchmark_return(), 2)}')
 
 # %%
 print(f'Returns: {round(pf.returns(), 3)}')
+
+# %%
+pf.benchmark_returns()
 
 # %%
 print(f'Benchmark value: {round(pf.benchmark_value(), 2)}')
@@ -74,4 +97,4 @@ print(pf.benchmark_value().describe())
 print(pf.drawdowns.drawdown.values)
 
 # %%
-pf.plot(title='Backtesting metrics').show()
+pf.plot(title='Metrics').show()
