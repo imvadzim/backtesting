@@ -37,3 +37,4 @@ Your average of stocks is = 66.
 
 Initialisation:
 jupytext --update-metadata '{"jupytext": {"cell_markers": "\"\"\""}}' main.py --to py:percent
+jupytext --opt notebook_metadata_filter=kernelspec,jupytext --opt cell_metadata_filter=-all main.py
