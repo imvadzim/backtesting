@@ -23,10 +23,10 @@
 # todo: 3.1 4h implement separately, because Yahoo Finance doesn't support it
 # 4. Backtest through Yahoo finance.
 # todo: 5. Backtest more than 1 stock at once
-# todo: 6. Implement separated backtesting graphs:
-# todo: - Profit/Loss (money)
+# 6. Implement separated backtesting graphs:
+# - Profit/Loss (money)
 # - Profit/loss in %
-# todo: - Positions value (money).
+# - Positions value (money).
 # - Dates.
 # - Buy/sell dots on where it bought and sold on the stock graph.
 # todo: 7. IF there is a period where the value (money) went to 0 the backtest still needs to keep running after that period even if the bot cant buy any more stocks. (In most backtests the backtest will stop per default if the value (money) goes to 0. Because this is a backtest to not buy the underlying but for buying the real company (the stock) the backtest needs to continue even if the value goes to 0. You still own the stocks in that option)
@@ -46,7 +46,8 @@ def backtest_strategy(ticker, start_date, timeframe, fast_ma_period, slow_ma_per
     exits = fast_ma.ma_crossed_below(slow_ma)
     pf = vbt.Portfolio.from_signals(price, entries, exits, fees=0.005)
     plot_strategy(price, fast_ma, slow_ma, pf, timeframe)
-    print(pf.stats())
+    print(f'\nUseful stats of the backtesting: \n\n{pf.stats()}')
+    print(f'\nInformation about the orders: \n\n{pf.orders.records_readable}')
 
 
 def plot_strategy(price, fast_ma, slow_ma, pf, timeframe):
