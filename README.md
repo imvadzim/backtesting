@@ -1,4 +1,4 @@
-# Backtesting for rodinicc
+# Backtesting
 
 Todo (requirements):
 1. Backtesting script (.py)
