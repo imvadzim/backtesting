@@ -1,18 +1,14 @@
 # ---
 # jupyter:
 #   jupytext:
-#     cell_markers: '"""'
-#     cell_metadata_filter: -all
-#     formats: ipynb,py:percent
-#     notebook_metadata_filter: all
 #     text_representation:
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
 #       jupytext_version: 1.14.7
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
+#     display_name: Python 3 (Spyder)
+#     language: python3
 #     name: python3
 # ---
 
@@ -34,6 +30,7 @@
 # todo: 9. (Additional, to be added to the strategy) It needs to be able to buy on 1h - 1w graphs.
 # todo: 10. (Additional) STOP LOSS /sell signal (False/true). If the stop loss is set to false, then the bot needs to hold the stock instead of selling it, it then needs to use its "martingale" method to buy at the next buy signal instead. You then average down on your value of the total stocks, But it cant take profit on negative if the average down still is negative even if the bot wants to take profit. If their is a positive amount on the average value of stocks after the second time it bought and the bot got the sell signal as normal its fine. Example you have 10 stocks you bought at 100. You then buy additional 20 stocks at 50. Your average of stocks is = 66.
 # todo: try fresh install on a new env
+
 # %%
 import vectorbt as vbt
 
@@ -59,7 +56,7 @@ def plot_strategy(price, fast_ma, slow_ma, pf, timeframe):
     pf.plot(title='Metrics').show_png()
 
 
-#%%
+# %%
 # Define parameters of the backtesting
 ticker = 'BTC-USD'  # todo: implement for portfolio
 start_date = '2019-01-01'
@@ -67,7 +64,7 @@ timeframe = '1d'  # choose any interval from [1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h
 fast_ma_period = 50
 slow_ma_period = 200
 
-
 # Run backtesting
 backtest_strategy(ticker, start_date, timeframe, fast_ma_period, slow_ma_period)
-#%%
+
+# %%
